@@ -1,102 +1,107 @@
+# Example file showing a basic pygame "game loop"
 import pygame
-import sys
 import random
 
+# pygame setup
 pygame.init()
-pygame.display.set_caption("Roger window")
-try:
-    icon = pygame.image.load("test.jpg")
-    pygame.display.set_icon(icon)
-except Exception as e:
-    print(f"Error loading icon: {e}")
-
-
+pygame.display.set_caption("Roger's First Game Development")
+screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
-screen = pygame.display.set_mode((1200, 600))
+running = True
 
-font = pygame.font.SysFont("Arial", 24)
+font = pygame.font.SysFont("Arial", 32)
 
 square_x = 600
-square_y = 400
-square_base_speed = 5
-square_boost_speed = 15
+square_y = 300
+player_color = (0, 255, 0)
+player_movement = 5
 boost_timer = 0
 
-coin_x = random.randint(10,1150)
-coin_y = random.randint(10,550)
 score = 0
-high_score = 0
+highscore = 0
 
-enemy_square_x = random.choice([100, 1000])
-enemy_square_y = random.choice([100, 500])
+coin_x = random.randint(10, 1220)
+coin_y = random.randint(10, 660)
+coin_color = (255, 255, 0)
+
+# Enemy - Starts with basic speed, as my score climbs, enemy speed increases
+# if i touch Enemy, my score will reset to 0, Enemy speed reset
+# Goal would be try to beat my own highscore
+enemy_square_x = random.randint(10, 1220)
+enemy_square_y = random.randint(10, 660)
+enemy_color = (255, 0, 0)
 enemy_speed = 2 + (1 * score)
-enemy_dir_x = random.choice([-1, 1])
-enemy_dir_y = random.choice([-1, 1])
+enemy_direction_x = random.choice([-1, 1])
+enemy_direction_y = random.choice([-1, 1])
 
-running = True
 while running:
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    if score > high_score:
-        high_score = score
+    # fill the screen with a color to wipe away anything from last frame
+    screen.fill("gray")
 
     enemy_speed = 2 + (1 * score)
-    enemy_square_x += enemy_speed * enemy_dir_x
-    enemy_square_y += enemy_speed * enemy_dir_y
-    if enemy_square_x <= 10 or enemy_square_x >= 1140:
-        enemy_dir_x *= -1
-    if enemy_square_y <= 10 or enemy_square_y >= 540:
-        enemy_dir_y *= -1
+    enemy_square_x += enemy_speed * enemy_direction_x
+    enemy_square_y += enemy_speed * enemy_direction_y
+    if enemy_square_x <= 10 or enemy_square_x >= 1220:
+        enemy_direction_x *= -1
+    if enemy_square_y <= 10 or enemy_square_y >= 660:
+        enemy_direction_y *= -1
 
+    # RENDER YOUR GAME HERE
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT] and square_x > 10:
-        square_x -= square_speed
-    if keys[pygame.K_RIGHT] and square_x < 1140:
-        square_x += square_speed
+        square_x -= player_movement
+    if keys[pygame.K_RIGHT] and square_x < 1220:
+        square_x += player_movement
     if keys[pygame.K_UP] and square_y > 10:
-        square_y -= square_speed
-    if keys[pygame.K_DOWN] and square_y < 540:
-        square_y += square_speed
-    
+        square_y -= player_movement
+    if keys[pygame.K_DOWN] and square_y < 660:
+        square_y += player_movement
+
     if keys[pygame.K_SPACE] and boost_timer <= 0:
-        square_speed = square_boost_speed
-        boost_timer = 120 
+        player_color = (255, 255, 255)
+        boost_timer = 2
+
     if boost_timer > 0:
-        square_speed = square_boost_speed
+        player_movement = 20
         boost_timer -= 1
     else:
-        square_speed = square_base_speed
+        player_color = (0, 255, 0)
+        player_movement = 5
 
-    player_rect = pygame.Rect(square_x, square_y, 50, 50)
-    coin_rect = pygame.Rect(coin_x, coin_y, 50, 50)
-    enemy_rect = pygame.Rect(enemy_square_x, enemy_square_y, 50, 50)
-    
-    if player_rect.colliderect(coin_rect):
+    score_text = font.render(f"Score: {score}", True, (255, 255, 255)) 
+    highscore_text = font.render(f"Highscore: {highscore}", True, (255, 255, 255))
+    screen.blit(score_text, (10, 10))   
+    screen.blit(highscore_text, (10, 42))
+
+    player_rectangle = pygame.Rect(square_x, square_y, 50, 50)
+    coin_ellipse = pygame.Rect(coin_x, coin_y, 50, 50)
+    enemy_rectangle = pygame.Rect(enemy_square_x, enemy_square_y, 50, 50)
+
+    if score > highscore:
+        highscore = score
+
+    if player_rectangle.colliderect(coin_ellipse):
         score += 1
-        coin_x = random.randint(10,1140)
-        coin_y = random.randint(10,540)
+        coin_x = random.randint(10, 1220)
+        coin_y = random.randint(10, 660)
     
-    if player_rect.colliderect(enemy_rect):
+    if player_rectangle.colliderect(enemy_rectangle):
         score = 0
+    
+    pygame.draw.ellipse(screen, coin_color, coin_ellipse)
+    pygame.draw.rect(screen, player_color, player_rectangle)
+    pygame.draw.rect(screen, enemy_color, enemy_rectangle)
+    pygame.draw.rect(screen, (255, 120, 255), (0, 0, 1280, 720), 10)
 
-    screen.fill((30,30,30))
-
-    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
-    high_score_text = font.render(f"High Score: {high_score}", True, (255, 255, 255))
-    screen.blit(score_text, (10, 10))
-    screen.blit(high_score_text, (10, 40))
-
-    player_color = (0, 255, 0) if boost_timer <= 0 else (255, 122, 255)
-
-    pygame.draw.rect(screen, player_color, player_rect)
-    pygame.draw.ellipse(screen, (255, 255, 0), coin_rect)
-    pygame.draw.rect(screen, (255, 0, 0), enemy_rect)
-
-    pygame.draw.rect(screen, (255, 122, 255), (0, 0, 1200, 600), 10)
+    # flip() the display to put your work on screen
     pygame.display.flip()
-    clock.tick(60)
+
+    clock.tick(60)  # limits FPS to 60
 
 pygame.quit()
-sys.exit()
