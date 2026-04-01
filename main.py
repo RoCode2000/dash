@@ -18,7 +18,9 @@ font = pygame.font.SysFont("Arial", 24)
 
 square_x = 600
 square_y = 400
-
+square_base_speed = 5
+square_boost_speed = 15
+boost_timer = 0
 
 coin_x = random.randint(10,1150)
 coin_y = random.randint(10,550)
@@ -50,13 +52,22 @@ while running:
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT] and square_x > 10:
-        square_x -= 5
+        square_x -= square_speed
     if keys[pygame.K_RIGHT] and square_x < 1140:
-        square_x += 5
+        square_x += square_speed
     if keys[pygame.K_UP] and square_y > 10:
-        square_y -= 5
+        square_y -= square_speed
     if keys[pygame.K_DOWN] and square_y < 540:
-        square_y += 5
+        square_y += square_speed
+    
+    if keys[pygame.K_SPACE] and boost_timer <= 0:
+        square_speed = square_boost_speed
+        boost_timer = 120 
+    if boost_timer > 0:
+        square_speed = square_boost_speed
+        boost_timer -= 1
+    else:
+        square_speed = square_base_speed
 
     player_rect = pygame.Rect(square_x, square_y, 50, 50)
     coin_rect = pygame.Rect(coin_x, coin_y, 50, 50)
@@ -77,7 +88,9 @@ while running:
     screen.blit(score_text, (10, 10))
     screen.blit(high_score_text, (10, 40))
 
-    pygame.draw.rect(screen, (0, 255, 0), player_rect)
+    player_color = (0, 255, 0) if boost_timer <= 0 else (255, 122, 255)
+
+    pygame.draw.rect(screen, player_color, player_rect)
     pygame.draw.ellipse(screen, (255, 255, 0), coin_rect)
     pygame.draw.rect(screen, (255, 0, 0), enemy_rect)
 
